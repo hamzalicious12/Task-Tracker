@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '@/api/api';
+import api from '../api/api';
 import { Lock, Mail } from 'lucide-react';
 
 const Login = () => {
@@ -11,19 +11,21 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Using the API client from api.ts which is already configured with the correct port
+      setError(''); // Clear any previous errors
+      console.log('Attempting login...'); // Debug log
+      
       const response = await api.post('/auth/login', {
         email,
         password,
       });
-      
+      console.log('Login response received'); // Debug log
       const { token, user } = response.data;
       login(token, user);
       
-      switch (user.role) {
+  switch (user.role) {
         case 'CEO':
           navigate('/ceo');
           break;
@@ -36,9 +38,20 @@ const Login = () => {
         case 'ADMIN':
           navigate('/admin');
           break;
+        default:
+          navigate('/');
       }
-    } catch (err) {
-      setError('Invalid email or password');
+    } catch (err: any) {
+      console.error('Login error:', err); // Debug log
+      if (err.response) {
+        // Server responded with error
+        setError(err.response.data.message || 'Login failed');
+      } else if (err.request) {
+        // No response received
+        setError('Unable to reach the server. Please try again later.');
+      } else {
+        setError('An unexpected error occurred');
+      }
     }
   };
 
