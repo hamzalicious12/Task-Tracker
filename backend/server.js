@@ -13,11 +13,15 @@ import notificationRoutes from './routes/notifications.js';
 dotenv.config();
 
 const app = express();
-FRONTEND_URL='https://task-tracker-frontend-obhp.onrender.com';
+
+// CORS configuration with proper environment variable usage
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Add your frontend URL
-  credentials: true
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 
 // Connect to MongoDB
@@ -34,7 +38,8 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-const PORT = process.env.PORT || 5000; 
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`CORS enabled for origin: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
 });
