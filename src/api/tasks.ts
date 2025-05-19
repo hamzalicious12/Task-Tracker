@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Task } from '../types';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://task-tracker-backend-qury.onrender.com/api';
 
 const getAuthHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
