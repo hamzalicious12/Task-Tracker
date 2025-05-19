@@ -1,12 +1,28 @@
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://task-tracker-backend-qury.onrender.com', // Updated to match server port 5000
+  baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
-  timeout: 10000 // 10 second timeout
+  withCredentials: true,
 });
+
+api.interceptors.request.use(
+  (config) => {
+    // Add CORS headers to every request
+    config.headers['Access-Control-Allow-Origin'] = process.env.REACT_APP_FRONTEND_URL || 'http://localhost:3000';
+    config.headers['Access-Control-Allow-Credentials'] = 'true';
+    console.log('Making request to:', config.url, 'with headers:', config.headers);
+    return config;
+  },
+  (error) => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
+  }
+);
 
 // Add token to requests
 api.interceptors.request.use(
