@@ -15,21 +15,19 @@ dotenv.config();
 const app = express();
 
 const allowedOrigins = [
-  'https://task-tracker-frontend-obhp.onrender.com',
-  'http://localhost:3000',
-  'http://localhost:5000'
+  'https://task-tracker-frontend-obhp.onrender.com', // Frontend URL
+  'http://localhost:3000' // Local development
 ];
 
 
 // CORS configuration with proper environment variable usage
 app.use(cors({
   origin: function (origin, callback) {
-    // Check if the origin is in our allowedOrigins array
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
+      callback(null, true); // Allow the origin
     } else {
       console.log('Blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error('Not allowed by CORS')); // Block the origin
     }
   },
   credentials: true,
@@ -37,6 +35,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
+// Add pre-flight handling for all routes
 app.options('*', cors());
 
 app.use(express.json());
