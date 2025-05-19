@@ -13,8 +13,11 @@ import notificationRoutes from './routes/notifications.js';
 dotenv.config();
 
 const app = express();
-
-app.use(cors());
+FRONTEND_URL='https://task-tracker-frontend-obhp.onrender.com';
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Add your frontend URL
+  credentials: true
+}));
 app.use(express.json());
 
 // Connect to MongoDB
