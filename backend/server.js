@@ -10,7 +10,7 @@ import attendanceRoutes from './routes/attendance.js';
 import departmentRoutes from './routes/departments.js';
 import notificationRoutes from './routes/notifications.js';
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 
