@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import authRoutes from './routes/auth.js';
 import taskRoutes from './routes/tasks.js';
 import userRoutes from './routes/users.js';
@@ -12,31 +13,34 @@ import notificationRoutes from './routes/notifications.js';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
+dotenv.config();
+
 const app = express();
 
 const allowedOrigins = [
-  'https://task-tracker-frontend-obhp.onrender.com', // Frontend URL
-  'http://localhost:3000' // Local development
+  'https://task-tracker-frontend-obhp.onrender.com',
+  'http://localhost:3000',
+  'https://task-tracker-frontend.onrender.com'  // Add any other frontend origins
 ];
 
-
-// CORS configuration with proper environment variable usage
+// Updated CORS configuration with specific options
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true); // Allow the origin
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
     } else {
       console.log('Blocked origin:', origin);
-      callback(new Error('Not allowed by CORS')); // Block the origin
+      callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  maxAge: 86400 // CORS preflight cache time in seconds
 }));
-
-// Add pre-flight handling for all routes
-app.options('*', cors());
 
 app.use(express.json());
 
