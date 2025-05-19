@@ -3,11 +3,10 @@ import axios from 'axios';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: 'https://task-tracker-backend-qury.onrender.com',
   headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true,
+    'Content-Type': 'application/json'
+  }
 });
 
 api.interceptors.request.use(
@@ -67,6 +66,16 @@ api.interceptors.response.use(
       // Something happened in setting up the request
       console.error('API Request Setup Error:', error.message);
     }
+    return Promise.reject(error);
+  }
+);
+api.interceptors.request.use(
+  (config) => {
+    console.log(`Making request to: ${config.baseURL}${config.url}`);
+    return config;
+  },
+  (error) => {
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
