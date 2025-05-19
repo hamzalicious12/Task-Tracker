@@ -1,83 +1,92 @@
-import axios from 'axios';
+import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// Types
+interface ErrorResponse {
+  message: string;
+  status?: number;
+}
 
+// Environment variables with type checking
+const API_URL = import.meta.env.VITE_API_URL || 'https://task-tracker-backend-qury.onrender.com';
+
+// Create axios instance with default config
 const api = axios.create({
-  baseURL: 'https://task-tracker-backend-qury.onrender.com',
+  baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true, // Enable credentials for CORS
+  timeout: 15000, // 15 second timeout
 });
 
+// Request interceptor
 api.interceptors.request.use(
-  (config) => {
-    // Add CORS headers to every request
-    config.headers['Access-Control-Allow-Origin'] = process.env.REACT_APP_FRONTEND_URL || 'http://localhost:3000';
-    config.headers['Access-Control-Allow-Credentials'] = 'true';
-    console.log('Making request to:', config.url, 'with headers:', config.headers);
-    return config;
-  },
-  (error) => {
-    console.error('Request error:', error);
-    return Promise.reject(error);
-  }
-);
-
-// Add token to requests
-api.interceptors.request.use(
-  (config) => {
+  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+    // Get token from localStorage
     const token = localStorage.getItem('token');
+    
+    // Log the request (development only)
+    if (import.meta.env.DEV) {
+      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    }
+
+    // Add auth token if it exists
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url} with auth token`);
-    } else {
-      console.warn(`API Request: ${config.method?.toUpperCase()} ${config.url} without auth token`);
     }
+
     return config;
   },
-  (error) => {
+  (error: AxiosError): Promise<AxiosError> => {
     console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
-// Add response interceptor for better error handling
+// Response interceptor
 api.interceptors.response.use(
-  (response) => {
-    console.log(`API Response: ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`);
+  (response: AxiosResponse): AxiosResponse => {
+    // Log successful response (development only)
+    if (import.meta.env.DEV) {
+      console.log(`API Response: ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`);
+    }
     return response;
   },
-  (error) => {
+  (error: AxiosError<ErrorResponse>): Promise<never> => {
+    // Handle different types of errors
     if (error.response) {
-      // The server responded with a status code outside of 2xx
-      console.error(`API Error ${error.response.status}: ${error.config?.method?.toUpperCase()} ${error.config?.url}`);
-      console.error('Error response:', error.response.data);
-      
+      // Server responded with error status
+      console.error('API Error:', {
+        status: error.response.status,
+        data: error.response.data,
+        url: error.config?.url
+      });
+
       // Handle authentication errors
       if (error.response.status === 401) {
-        console.warn('Authentication error - consider redirecting to login');
-        // Could add logic to redirect to login or refresh token
+        localStorage.removeItem('token');
+        window.location.href = '/login';
       }
+
+      // Handle CORS errors
+      if (error.response.status === 0 && error.message.includes('CORS')) {
+        console.error('CORS Error - Check API configuration');
+      }
+
     } else if (error.request) {
-      // The request was made but no response was received
-      console.error(`API No Response: ${error.config?.method?.toUpperCase()} ${error.config?.url}`);
-      console.error('No response received:', error.request);
-    } else {
-      // Something happened in setting up the request
-      console.error('API Request Setup Error:', error.message);
+      // Request made but no response received
+      console.error('No response received:', {
+        request: error.request,
+        url: error.config?.url
+      });
     }
-    return Promise.reject(error);
-  }
-);
-api.interceptors.request.use(
-  (config) => {
-    console.log(`Making request to: ${config.baseURL}${config.url}`);
-    return config;
-  },
-  (error) => {
-    console.error('Request error:', error);
+
     return Promise.reject(error);
   }
 );
 
+// Export types
+export type { ErrorResponse };
+
+// Export api instance
 export default api;
